@@ -6,11 +6,11 @@ import { WeekDayStrip } from "@/components/ui/WeekDayStrip";
 import { MotivationalCard } from "@/components/ui/MotivationalCard";
 
 const BLOCKS = [
-  { key: "movilidad", icon: Wind, title: "Movilidad", accent: "lime" as const },
-  { key: "calentamiento", icon: Flame, title: "Calentamiento", accent: "orange" as const },
-  { key: "fuerza", icon: Dumbbell, title: "Fuerza / Habilidad", accent: "lime" as const },
-  { key: "wod", icon: Timer, title: "WOD", accent: "orange" as const },
-  { key: "accesorios", icon: PlusCircle, title: "Accesorios", accent: "lime" as const },
+  { key: "movilidad", icon: Wind, title: "Movilidad" },
+  { key: "calentamiento", icon: Flame, title: "Calentamiento" },
+  { key: "fuerza", icon: Dumbbell, title: "Fuerza / Habilidad" },
+  { key: "wod", icon: Timer, title: "WOD" },
+  { key: "accesorios", icon: PlusCircle, title: "Accesorios" },
 ];
 
 export function HomeWeekView() {
@@ -28,7 +28,6 @@ export function HomeWeekView() {
             eyebrow={block.title}
             title="Sin programar aún"
             subtitle="Tu coach todavía no ha subido esta parte de la sesión"
-            accent={block.accent}
           />
         ))}
       </div>

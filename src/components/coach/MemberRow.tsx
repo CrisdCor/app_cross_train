@@ -53,13 +53,13 @@ export function MemberRow({ membership }: { membership: MembershipWithProfile })
           "flex shrink-0 items-center gap-2 rounded-control border px-3 py-2 text-xs font-semibold uppercase tracking-wide transition-colors disabled:opacity-50",
           isActive
             ? "border-accent-lime/40 text-accent-lime"
-            : "border-accent-orange/40 text-accent-orange"
+            : "border-border text-text-muted"
         )}
       >
         <span
           className={clsx(
             "h-2 w-2 rounded-full",
-            isActive ? "bg-accent-lime" : "bg-accent-orange"
+            isActive ? "bg-accent-lime" : "bg-text-muted"
           )}
         />
         {isActive ? "Activo" : "Inactivo"}

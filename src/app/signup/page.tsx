@@ -7,43 +7,48 @@ import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { AppShell } from "@/components/ui/AppShell";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Button } from "@/components/ui/Button";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
+
+type SignupRole = "user" | "head_coach" | "coach";
+
+const ROLE_OPTIONS: { value: SignupRole; label: string }[] = [
+  { value: "user", label: "Atleta" },
+  { value: "head_coach", label: "Head Coach" },
+  { value: "coach", label: "Coach" },
+];
 
 export default function SignupPage() {
   const router = useRouter();
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    alias: "",
-    documentId: "",
-    email: "",
-    password: "",
-    inviteCode: "",
-  });
+  const [role, setRole] = useState<SignupRole>("user");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  function update<K extends keyof typeof form>(key: K, value: string) {
-    setForm((f) => ({ ...f, [key]: value }));
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setLoading(true);
 
+    if (password !== confirmPassword) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+
+    if (role !== "user" && !code.trim()) {
+      setError("Necesitas un código temporal para registrarte con ese rol.");
+      return;
+    }
+
+    setLoading(true);
     const supabase = createClient();
+
     const { data, error: signUpError } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: {
-        data: {
-          first_name: form.firstName,
-          last_name: form.lastName,
-          alias: form.alias || null,
-          document_id: form.documentId || null,
-        },
-      },
+      email,
+      password,
     });
 
     if (signUpError || !data.user) {
@@ -52,14 +57,14 @@ export default function SignupPage() {
       return;
     }
 
-    if (form.inviteCode.trim()) {
-      const { error: redeemError } = await supabase.rpc("redeem_invite_code", {
-        p_code: form.inviteCode.trim(),
+    if (role !== "user") {
+      const { error: redeemError } = await supabase.rpc("redeem_role_code", {
+        p_code: code.trim(),
       });
       if (redeemError) {
         setLoading(false);
         setError(
-          "Tu cuenta se creó, pero el código de invitación no es válido. Pídele uno nuevo a tu coach."
+          "Tu cuenta se creó, pero el código no es válido o ya expiró. Pídele uno nuevo a quien te lo compartió."
         );
         return;
       }
@@ -83,57 +88,46 @@ export default function SignupPage() {
             Crea tu cuenta
           </h1>
           <p className="mt-2 text-sm text-text-secondary">
-            Únete a la comunidad de tu coach o box
+            Elige tu rol para empezar
           </p>
         </motion.div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <div className="grid grid-cols-2 gap-3">
-            <Input
-              placeholder="Nombres"
-              value={form.firstName}
-              onChange={(e) => update("firstName", e.target.value)}
-              required
-            />
-            <Input
-              placeholder="Apellidos"
-              value={form.lastName}
-              onChange={(e) => update("lastName", e.target.value)}
-              required
-            />
-          </div>
-          <Input
-            placeholder="Alias (opcional)"
-            value={form.alias}
-            onChange={(e) => update("alias", e.target.value)}
-          />
-          <Input
-            placeholder="Documento de identidad"
-            value={form.documentId}
-            onChange={(e) => update("documentId", e.target.value)}
-            required
-          />
+          <SegmentedControl options={ROLE_OPTIONS} value={role} onChange={setRole} />
+
           <Input
             type="email"
             placeholder="Correo electrónico"
             autoComplete="email"
-            value={form.email}
-            onChange={(e) => update("email", e.target.value)}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
-          <Input
-            type="password"
+          <PasswordInput
             placeholder="Contraseña"
             autoComplete="new-password"
-            value={form.password}
-            onChange={(e) => update("password", e.target.value)}
+            minLength={6}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <Input
-            placeholder="Código de invitación (si tu coach te lo dio)"
-            value={form.inviteCode}
-            onChange={(e) => update("inviteCode", e.target.value)}
+          <PasswordInput
+            placeholder="Confirma tu contraseña"
+            autoComplete="new-password"
+            minLength={6}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
           />
+
+          {role !== "user" && (
+            <Input
+              placeholder="Código temporal"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              required
+            />
+          )}
 
           {error && (
             <p className="text-sm text-accent-orange" role="alert">

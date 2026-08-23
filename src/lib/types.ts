@@ -8,8 +8,10 @@ export interface Profile {
   alias: string | null;
   document_id: string | null;
   email: string;
+  whatsapp: string | null;
   avatar_url: string | null;
   logo_url: string | null;
+  community_id: string | null;
   created_at: string;
   updated_at: string;
 }

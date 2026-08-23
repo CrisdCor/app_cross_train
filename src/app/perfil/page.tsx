@@ -29,6 +29,12 @@ export default async function PerfilPage() {
           <p className="text-xs uppercase tracking-wide text-text-muted">Correo</p>
           <p className="mt-1 text-sm text-text-secondary">{user.email}</p>
         </Card>
+        {profile?.whatsapp && (
+          <Card>
+            <p className="text-xs uppercase tracking-wide text-text-muted">WhatsApp</p>
+            <p className="mt-1 text-sm text-text-secondary">{profile.whatsapp}</p>
+          </Card>
+        )}
 
         <SignOutButton />
       </div>
