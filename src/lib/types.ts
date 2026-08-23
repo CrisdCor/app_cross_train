@@ -54,3 +54,17 @@ export interface InviteCode {
   expires_at: string | null;
   created_at: string;
 }
+
+export type RoleCodeTarget = "head_coach" | "coach";
+
+export interface RoleInviteCode {
+  id: string;
+  code: string;
+  target_role: RoleCodeTarget;
+  community_id: string | null;
+  created_by: string;
+  max_uses: number;
+  uses_count: number;
+  expires_at: string | null;
+  created_at: string;
+}
