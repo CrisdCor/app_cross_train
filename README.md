@@ -15,9 +15,16 @@ WOD, accesorios) y hacen seguimiento de su comunidad.
 
 ```bash
 npm install
-cp .env.local.example .env.local
-# completa NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY
 npm run dev
+```
+
+Antes de correrlo, crea un archivo `.env.local` en la raíz del proyecto (no se
+sincroniza automáticamente por seguridad) con este contenido, reemplazando
+los valores por los de tu proyecto de Supabase (Project Settings → API):
+
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ```
 
 Abre http://localhost:3000 — te manda directo a `/login`.
