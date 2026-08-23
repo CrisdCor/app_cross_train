@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Camera } from "lucide-react";
+import { Camera, Image as ImageIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -12,12 +12,16 @@ import type { Profile } from "@/lib/types";
 export function CompleteProfileForm({
   userId,
   profile,
+  communityLogoUrl = null,
 }: {
   userId: string;
   profile: Profile | null;
+  communityLogoUrl?: string | null;
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const isHeadCoach = profile?.role === "head_coach";
 
   const [firstName, setFirstName] = useState(profile?.first_name ?? "");
   const [lastName, setLastName] = useState(profile?.last_name ?? "");
@@ -28,6 +32,8 @@ export function CompleteProfileForm({
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
     profile?.avatar_url ?? null
   );
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(communityLogoUrl);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,31 +44,48 @@ export function CompleteProfileForm({
     setAvatarPreview(URL.createObjectURL(file));
   }
 
+  function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  }
+
+  async function uploadToAvatars(file: File, prefix: string) {
+    const supabase = createClient();
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${userId}/${prefix}-${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { upsert: true });
+
+    if (uploadError) {
+      throw new Error("upload_failed");
+    }
+
+    const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+    return data.publicUrl;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     let avatarUrl: string | null = null;
+    let communityLogo: string | null = null;
 
-    if (avatarFile) {
-      const supabase = createClient();
-      const ext = avatarFile.name.split(".").pop() || "jpg";
-      const path = `${userId}/avatar-${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(path, avatarFile, { upsert: true });
-
-      if (uploadError) {
-        setLoading(false);
-        setError("No se pudo subir la foto. Intenta de nuevo.");
-        return;
+    try {
+      if (avatarFile) {
+        avatarUrl = await uploadToAvatars(avatarFile, "avatar");
       }
-
-      const { data: publicUrlData } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(path);
-      avatarUrl = publicUrlData.publicUrl;
+      if (logoFile) {
+        communityLogo = await uploadToAvatars(logoFile, "logo");
+      }
+    } catch {
+      setLoading(false);
+      setError("No se pudo subir la imagen. Intenta de nuevo.");
+      return;
     }
 
     const result = await completeProfile({
@@ -72,6 +95,7 @@ export function CompleteProfileForm({
       documentId,
       whatsapp,
       avatarUrl,
+      communityLogoUrl: communityLogo,
     });
 
     setLoading(false);
@@ -87,7 +111,7 @@ export function CompleteProfileForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="mb-2 flex justify-center">
+      <div className="mb-2 flex justify-center gap-6">
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
@@ -116,7 +140,45 @@ export function CompleteProfileForm({
           onChange={handleFileChange}
           className="hidden"
         />
+
+        {isHeadCoach && (
+          <>
+            <button
+              type="button"
+              onClick={() => logoInputRef.current?.click()}
+              className="relative h-24 w-24 overflow-hidden rounded-full border border-border bg-surface-2"
+            >
+              {logoPreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={logoPreview}
+                  alt="Logo de tu comunidad"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-text-muted">
+                  <ImageIcon size={24} />
+                </div>
+              )}
+              <span className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-surface-3">
+                <Camera size={14} className="text-text-secondary" />
+              </span>
+            </button>
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleLogoChange}
+              className="hidden"
+            />
+          </>
+        )}
       </div>
+      {isHeadCoach && (
+        <p className="-mt-2 mb-1 text-center text-xs text-text-muted">
+          Tu foto y el logo de tu comunidad o box (opcional)
+        </p>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <Input

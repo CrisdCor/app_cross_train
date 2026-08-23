@@ -15,7 +15,7 @@ export function PasswordInput({
       <input
         type={visible ? "text" : "password"}
         className={clsx(
-          "h-14 w-full rounded-control border border-border bg-surface-2 pl-4 pr-12 text-[15px] text-text-primary placeholder:text-text-muted",
+          "h-[42px] w-full rounded-control border border-border bg-surface-2 pl-4 pr-12 text-[15px] text-text-primary placeholder:text-text-muted",
           "outline-none transition-colors focus:border-text-secondary",
           className
         )}
@@ -24,7 +24,7 @@ export function PasswordInput({
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
-        className="absolute right-0 top-0 flex h-14 w-12 items-center justify-center text-text-muted"
+        className="absolute right-0 top-0 flex h-[42px] w-12 items-center justify-center text-text-muted"
         aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
         tabIndex={-1}
       >

@@ -9,6 +9,7 @@ export interface CompleteProfileInput {
   documentId: string;
   whatsapp: string;
   avatarUrl: string | null;
+  communityLogoUrl?: string | null;
 }
 
 export async function completeProfile(input: CompleteProfileInput) {
@@ -40,6 +41,17 @@ export async function completeProfile(input: CompleteProfileInput) {
 
   if (error) {
     return { error: error.message };
+  }
+
+  if (input.communityLogoUrl) {
+    const { error: logoError } = await supabase
+      .from("communities")
+      .update({ logo_url: input.communityLogoUrl })
+      .eq("owner_id", user.id);
+
+    if (logoError) {
+      return { error: logoError.message };
+    }
   }
 
   return { success: true };
