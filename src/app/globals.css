@@ -19,7 +19,7 @@
 
   /* Radii / motion */
   --radius-card: 1.25rem;
-  --radius-control: 0.875rem;
+  --radius-control: 0.625rem;
   --ease-app: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
