@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# App Cross Train
 
-## Getting Started
+App mobile-first (PWA) para entrenadores/boxes de CrossFit: comparten con sus
+atletas la programación del día (movilidad, calentamiento, fuerza/habilidad,
+WOD, accesorios) y hacen seguimiento de su comunidad.
 
-First, run the development server:
+## Stack
+
+- Next.js 16 (App Router) + TypeScript + Tailwind CSS v4
+- Supabase (Auth + Postgres + Storage) vía `@supabase/ssr`
+- framer-motion para las animaciones de navegación
+- Tipografías self-hosted: Audiowide (títulos) y Exo 2 (texto)
+
+## Cómo correr el proyecto en local
 
 ```bash
+npm install
+cp .env.local.example .env.local
+# completa NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre http://localhost:3000 — te manda directo a `/login`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Variables de entorno
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Ver `.env.local.example`. Se obtienen desde el dashboard de Supabase del
+proyecto (Project Settings → API).
 
-## Learn More
+## Estructura
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+  app/
+    login/          pantalla de inicio de sesión
+    signup/         registro de atleta (con código de invitación opcional)
+    home/            feed/home con navegación semanal (shell inicial)
+    workout/         placeholder del detalle de la sesión
+    perfil/          perfil del usuario + cerrar sesión
+  components/
+    ui/              primitivas: Button, Input, Card, BottomNav, WeekDayStrip...
+    home/            piezas específicas del home
+  lib/
+    supabase/        clientes de Supabase (browser, server, middleware)
+    types.ts         tipos compartidos (Role, Profile, Community, Membership)
+supabase/
+  migrations/         esquema SQL versionado (roles, comunidades, invitaciones)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Modelo de datos (resumen)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **profiles**: perfil de cada usuario autenticado, con `role` en
+  `admin | head_coach | coach | user`.
+- **communities**: la "red" de un Head Coach (o futuro Box). Se crea sola
+  cuando un perfil pasa a `head_coach`.
+- **memberships**: relación usuario↔comunidad con estado `active/inactive`
+  (control manual de mensualidad por ahora).
+- **invite_codes** + función `redeem_invite_code`: un atleta entra a una
+  comunidad canjeando un código que genera su Head Coach.
 
-## Deploy on Vercel
+Ver `supabase/migrations/0001_init.sql` para el detalle completo (incluye
+políticas de RLS).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Roadmap inmediato (no incluido aún)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Panel del Head Coach: crear planes, generar códigos de invitación,
+  activar/inactivar atletas.
+- Programación real por día (contenido de cada bloque) en vez del placeholder.
+- Seguimiento de RM/PR/marcas personales.
+- Feed social tipo historias 24h.
