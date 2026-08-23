@@ -3,17 +3,25 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Home, Dumbbell, User } from "lucide-react";
+import { Home, Dumbbell, User, Users } from "lucide-react";
 import { clsx } from "clsx";
+import type { Role } from "@/lib/types";
 
-const items = [
+const baseItems = [
   { href: "/home", label: "Inicio", icon: Home },
   { href: "/workout", label: "Workout", icon: Dumbbell },
-  { href: "/perfil", label: "Perfil", icon: User },
 ];
 
-export function BottomNav() {
+const coachItem = { href: "/coach", label: "Coach", icon: Users };
+
+const profileItem = { href: "/perfil", label: "Perfil", icon: User };
+
+export function BottomNav({ role }: { role?: Role }) {
   const pathname = usePathname();
+  const items =
+    role === "head_coach" || role === "admin"
+      ? [...baseItems, coachItem, profileItem]
+      : [...baseItems, profileItem];
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-md">

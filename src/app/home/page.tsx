@@ -1,9 +1,7 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getSessionProfile } from "@/lib/supabase/profile";
 import { AppShell } from "@/components/ui/AppShell";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { HomeWeekView } from "@/components/home/HomeWeekView";
-import type { Profile } from "@/lib/types";
 
 const ROLE_LABEL: Record<string, string> = {
   admin: "Administrador",
@@ -13,20 +11,7 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 export default async function HomePage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle<Profile>();
+  const { user, profile } = await getSessionProfile();
 
   const firstName = profile?.first_name ?? user.email?.split("@")[0] ?? "Atleta";
   const roleLabel = ROLE_LABEL[profile?.role ?? "user"];
@@ -56,7 +41,7 @@ export default async function HomePage() {
 
       <HomeWeekView />
 
-      <BottomNav />
+      <BottomNav role={profile?.role} />
     </AppShell>
   );
 }

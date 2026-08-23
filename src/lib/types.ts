@@ -34,3 +34,21 @@ export interface Membership {
   activated_at: string | null;
   deactivated_at: string | null;
 }
+
+export interface MembershipWithProfile extends Membership {
+  profile: Pick<
+    Profile,
+    "id" | "first_name" | "last_name" | "alias" | "email" | "avatar_url"
+  > | null;
+}
+
+export interface InviteCode {
+  id: string;
+  community_id: string;
+  code: string;
+  created_by: string;
+  max_uses: number;
+  uses_count: number;
+  expires_at: string | null;
+  created_at: string;
+}

@@ -1,8 +1,11 @@
+import { getSessionProfile } from "@/lib/supabase/profile";
 import { AppShell } from "@/components/ui/AppShell";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { Card } from "@/components/ui/Card";
 
-export default function WorkoutPage() {
+export default async function WorkoutPage() {
+  const { profile } = await getSessionProfile();
+
   return (
     <AppShell withBottomNavPadding>
       <header className="px-5 pt-6">
@@ -18,7 +21,7 @@ export default function WorkoutPage() {
           </p>
         </Card>
       </div>
-      <BottomNav />
+      <BottomNav role={profile?.role} />
     </AppShell>
   );
 }

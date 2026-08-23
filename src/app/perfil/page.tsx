@@ -1,26 +1,11 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getSessionProfile } from "@/lib/supabase/profile";
 import { AppShell } from "@/components/ui/AppShell";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { Card } from "@/components/ui/Card";
 import { SignOutButton } from "@/components/perfil/SignOutButton";
-import type { Profile } from "@/lib/types";
 
 export default async function PerfilPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle<Profile>();
+  const { user, profile } = await getSessionProfile();
 
   return (
     <AppShell withBottomNavPadding>
@@ -48,7 +33,7 @@ export default async function PerfilPage() {
         <SignOutButton />
       </div>
 
-      <BottomNav />
+      <BottomNav role={profile?.role} />
     </AppShell>
   );
 }
