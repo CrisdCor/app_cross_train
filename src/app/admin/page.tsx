@@ -6,6 +6,8 @@ import { BottomNav } from "@/components/ui/BottomNav";
 import { RoleCodesPanel } from "@/components/admin/RoleCodesPanel";
 import type { RoleInviteCode } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminPage() {
   const { profile } = await getSessionProfile();
 

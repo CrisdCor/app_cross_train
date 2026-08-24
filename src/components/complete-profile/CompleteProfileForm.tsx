@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Camera, Image as ImageIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/Input";
@@ -18,7 +17,6 @@ export function CompleteProfileForm({
   profile: Profile | null;
   communityLogoUrl?: string | null;
 }) {
-  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const isHeadCoach = profile?.role === "head_coach";
@@ -105,8 +103,9 @@ export function CompleteProfileForm({
       return;
     }
 
-    router.push("/home");
-    router.refresh();
+    // Navegación dura a propósito: ver comentario equivalente en /login.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.href = "/home";
   }
 
   return (

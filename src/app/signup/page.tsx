@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { AppShell } from "@/components/ui/AppShell";
@@ -20,7 +19,6 @@ const ROLE_OPTIONS: { value: SignupRole; label: string }[] = [
 ];
 
 export default function SignupPage() {
-  const router = useRouter();
   const [role, setRole] = useState<SignupRole>("user");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -71,8 +69,9 @@ export default function SignupPage() {
     }
 
     setLoading(false);
-    router.push("/home");
-    router.refresh();
+    // Navegación dura a propósito: ver comentario equivalente en /login.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.href = "/home";
   }
 
   return (

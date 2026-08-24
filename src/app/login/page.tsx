@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { AppShell } from "@/components/ui/AppShell";
@@ -11,7 +10,6 @@ import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Button } from "@/components/ui/Button";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,8 +33,11 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/home");
-    router.refresh();
+    // Navegación dura (no router.push) a propósito: fuerza una carga completa
+    // para que el Server Component de /home lea la sesión y el perfil ya
+    // actualizados, sin depender del client-side router cache de Next.js.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.href = "/home";
   }
 
   async function handleGoogle() {

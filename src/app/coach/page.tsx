@@ -8,6 +8,8 @@ import { InviteCodesPanel } from "@/components/coach/InviteCodesPanel";
 import { MemberRow } from "@/components/coach/MemberRow";
 import type { Community, InviteCode, MembershipWithProfile } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export default async function CoachPage() {
   const { user, profile } = await getSessionProfile();
 

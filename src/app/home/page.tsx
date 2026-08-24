@@ -6,6 +6,10 @@ import { BottomNav } from "@/components/ui/BottomNav";
 import { HomeWeekView } from "@/components/home/HomeWeekView";
 import { JoinCommunityCard } from "@/components/home/JoinCommunityCard";
 
+// Fuerza render dinámico: nunca sirvas una versión cacheada de esta pantalla
+// personalizada (rol, nombre, membresía cambian por usuario y con el tiempo).
+export const dynamic = "force-dynamic";
+
 const ROLE_LABEL: Record<string, string> = {
   admin: "Administrador",
   head_coach: "Head Coach",

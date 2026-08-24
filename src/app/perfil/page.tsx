@@ -4,6 +4,8 @@ import { BottomNav } from "@/components/ui/BottomNav";
 import { Card } from "@/components/ui/Card";
 import { SignOutButton } from "@/components/perfil/SignOutButton";
 
+export const dynamic = "force-dynamic";
+
 export default async function PerfilPage() {
   const { user, profile } = await getSessionProfile();
 

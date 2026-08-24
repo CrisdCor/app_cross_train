@@ -4,6 +4,8 @@ import { AppShell } from "@/components/ui/AppShell";
 import { CompleteProfileForm } from "@/components/complete-profile/CompleteProfileForm";
 import type { Community } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export default async function CompleteProfilePage() {
   const { user, profile } = await getSessionProfile();
 
