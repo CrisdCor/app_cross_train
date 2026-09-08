@@ -3,10 +3,11 @@ import { requireSession } from "@/lib/session";
 import { NotificationService } from "@/services/NotificationService";
 import { TopHeader } from "@/components/layout/TopHeader";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { HeadCoachSearch } from "@/components/search/HeadCoachSearch";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
+export default async function SearchPage() {
   const { profile } = await requireSession();
   const supabase = await createClient();
   const notifications = await new NotificationService(supabase).list();
@@ -18,13 +19,9 @@ export default async function HomePage() {
         hasUnreadNotifications={notifications.some((n) => !n.isRead)}
       />
 
-      <main className="flex flex-1 flex-col px-5 pb-24 pt-2">
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-          <p className="label-heading text-sm text-text-secondary">Sin programación aún</p>
-          <p className="max-w-[240px] text-sm text-text-muted">
-            Cuando tu Head Coach publique tu entrenamiento, lo verás aquí.
-          </p>
-        </div>
+      <main className="flex-1 px-5 pb-24 pt-2">
+        <h1 className="label-heading mb-4 text-lg text-text-primary">Buscar comunidad</h1>
+        <HeadCoachSearch />
       </main>
 
       <BottomNav />

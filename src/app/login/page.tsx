@@ -9,7 +9,7 @@ import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Button } from "@/components/ui/Button";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +22,7 @@ export default function LoginPage() {
     const authService = new AuthService(createClient());
 
     try {
-      await authService.signIn({ email, password });
+      await authService.signIn({ identifier, password });
       // Navegación dura a propósito: garantiza que el Server Component de
       // /home lea la sesión recién creada sin depender del router cache.
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination
@@ -44,11 +44,13 @@ export default function LoginPage() {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <Input
-          type="email"
-          placeholder="Correo electrónico"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          type="text"
+          placeholder="Usuario o correo electrónico"
+          autoComplete="username"
+          autoCapitalize="off"
+          spellCheck={false}
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
           required
         />
         <PasswordInput

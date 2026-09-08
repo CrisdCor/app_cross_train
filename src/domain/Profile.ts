@@ -61,6 +61,17 @@ export class Profile {
     return this.fullName.trim() || this.handle;
   }
 
+  /** Primer nombre para saludos ("Hola, Cris"); cae al username si aún no hay nombre completo. */
+  get greetingName(): string {
+    const first = this.fullName.trim().split(/\s+/)[0];
+    return first || this.username;
+  }
+
+  get initials(): string {
+    const source = this.fullName.trim() || this.username;
+    return source.slice(0, 2).toUpperCase();
+  }
+
   static readonly ROLE_LABEL: Record<Role, string> = {
     admin: "Administrador",
     head_coach: "Head Coach",

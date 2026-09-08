@@ -7,7 +7,8 @@ export interface SignUpParams {
 }
 
 export interface SignInParams {
-  email: string;
+  /** Correo electrónico, o username con o sin "@" inicial. */
+  identifier: string;
   password: string;
 }
 
@@ -63,12 +64,31 @@ export class AuthService {
     }
   }
 
-  async signIn({ email, password }: SignInParams): Promise<void> {
+  async signIn({ identifier, password }: SignInParams): Promise<void> {
+    const email = await this.resolveEmail(identifier.trim());
     const { error } = await this.supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      throw new AuthError("Correo o contraseña incorrectos.");
+      throw new AuthError("Usuario, correo o contraseña incorrectos.");
     }
+  }
+
+  /** Si `identifier` no es un correo, lo trata como username y resuelve su email. */
+  private async resolveEmail(identifier: string): Promise<string> {
+    if (identifier.includes("@") && !identifier.startsWith("@")) {
+      return identifier;
+    }
+
+    const username = AuthService.normalizeUsername(identifier.replace(/^@/, ""));
+    const { data, error } = await this.supabase.rpc("get_login_email", {
+      p_username: username,
+    });
+
+    if (error || !data) {
+      throw new AuthError("Usuario, correo o contraseña incorrectos.");
+    }
+
+    return data as string;
   }
 
   async signOut(): Promise<void> {
