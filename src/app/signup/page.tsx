@@ -135,14 +135,14 @@ export default function SignupPage() {
             {usernameStatus === "available" && (
               <Check
                 size={18}
-                strokeWidth={1.75}
+                strokeWidth={1.5}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-success"
               />
             )}
             {(usernameStatus === "taken" || usernameStatus === "invalid") && (
               <X
                 size={18}
-                strokeWidth={1.75}
+                strokeWidth={1.5}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-error"
               />
             )}

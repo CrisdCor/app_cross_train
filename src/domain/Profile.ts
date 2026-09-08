@@ -7,6 +7,8 @@ export interface ProfileRow {
   full_name: string;
   email: string;
   avatar_url: string | null;
+  bio: string;
+  program_name: string;
   created_at: string;
   updated_at: string;
 }
@@ -24,6 +26,8 @@ export class Profile {
     public readonly fullName: string,
     public readonly email: string,
     public readonly avatarUrl: string | null,
+    public readonly bio: string,
+    public readonly programName: string,
     public readonly createdAt: string,
     public readonly updatedAt: string
   ) {}
@@ -36,6 +40,8 @@ export class Profile {
       row.full_name,
       row.email,
       row.avatar_url,
+      row.bio,
+      row.program_name,
       row.created_at,
       row.updated_at
     );
@@ -70,6 +76,15 @@ export class Profile {
   get initials(): string {
     const source = this.fullName.trim() || this.username;
     return source.slice(0, 2).toUpperCase();
+  }
+
+  /**
+   * Solo aplica a Head Coach por ahora: nombre y biografía son obligatorios
+   * para que su perfil público (visible a atletas) tenga sentido.
+   */
+  get isProfileComplete(): boolean {
+    if (!this.isHeadCoach) return true;
+    return this.fullName.trim().length > 0 && this.bio.trim().length > 0;
   }
 
   static readonly ROLE_LABEL: Record<Role, string> = {

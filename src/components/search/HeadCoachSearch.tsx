@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search as SearchIcon, Check } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
+import { Search as SearchIcon, ChevronRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { CommunityService, CommunityServiceError, type HeadCoachResult } from "@/services/CommunityService";
+import { CommunityService, type HeadCoachResult } from "@/services/CommunityService";
 import { Input } from "@/components/ui/Input";
 
 type SearchState = { query: string; results: HeadCoachResult[] };
@@ -11,9 +13,6 @@ type SearchState = { query: string; results: HeadCoachResult[] };
 export function HeadCoachSearch() {
   const [query, setQuery] = useState("");
   const [searchState, setSearchState] = useState<SearchState | null>(null);
-  const [requestedIds, setRequestedIds] = useState<Set<string>>(new Set());
-  const [errorByCommunity, setErrorByCommunity] = useState<Record<string, string>>({});
-  const [sendingId, setSendingId] = useState<string | null>(null);
 
   const trimmedQuery = query.trim();
 
@@ -35,24 +34,6 @@ export function HeadCoachSearch() {
 
     return () => clearTimeout(timeout);
   }, [trimmedQuery]);
-
-  async function handleRequest(result: HeadCoachResult) {
-    setSendingId(result.communityId);
-    setErrorByCommunity((prev) => ({ ...prev, [result.communityId]: "" }));
-
-    const service = new CommunityService(createClient());
-
-    try {
-      await service.requestToJoin(result.communityId);
-      setRequestedIds((prev) => new Set(prev).add(result.communityId));
-    } catch (err) {
-      const message =
-        err instanceof CommunityServiceError ? err.message : "No se pudo enviar la solicitud.";
-      setErrorByCommunity((prev) => ({ ...prev, [result.communityId]: message }));
-    } finally {
-      setSendingId(null);
-    }
-  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -83,39 +64,38 @@ export function HeadCoachSearch() {
         <p className="text-sm text-text-muted">No encontramos un Head Coach con ese usuario.</p>
       )}
 
-      <ul className="flex flex-col gap-3">
-        {results.map((result) => {
-          const alreadyRequested = requestedIds.has(result.communityId);
-          const error = errorByCommunity[result.communityId];
-
-          return (
-            <li
-              key={result.id}
-              className="flex items-center justify-between gap-3 border border-border px-4 py-3"
+      <ul className="flex flex-col">
+        {results.map((result) => (
+          <li key={result.id} className="border-b border-border">
+            <Link
+              href={`/coach/${result.username}`}
+              className="flex items-center gap-3 py-3 active:opacity-70"
             >
-              <div className="min-w-0">
-                <p className="truncate text-sm font-bold text-text-primary">@{result.username}</p>
-                <p className="truncate text-xs text-text-muted">{result.communityName}</p>
-                {error && <p className="mt-1 text-xs text-error">{error}</p>}
-              </div>
-              {alreadyRequested ? (
-                <span className="flex shrink-0 items-center gap-1 text-xs font-bold text-success">
-                  <Check size={16} strokeWidth={1.75} />
-                  Enviada
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden bg-black text-xs font-bold text-white">
+                {result.avatarUrl ? (
+                  <Image
+                    src={result.avatarUrl}
+                    alt=""
+                    width={44}
+                    height={44}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  (result.fullName.trim() || result.username).slice(0, 2).toUpperCase()
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-bold text-text-primary">
+                  @{result.username}
                 </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => handleRequest(result)}
-                  disabled={sendingId === result.communityId}
-                  className="label-heading shrink-0 border border-black px-3 py-2 text-xs disabled:opacity-40"
-                >
-                  {sendingId === result.communityId ? "Enviando…" : "Solicitar"}
-                </button>
-              )}
-            </li>
-          );
-        })}
+                <span className="block truncate text-xs text-text-muted">
+                  {result.communityName}
+                </span>
+              </span>
+              <ChevronRight size={18} strokeWidth={1.5} className="shrink-0 text-text-muted" />
+            </Link>
+          </li>
+        ))}
       </ul>
     </div>
   );
