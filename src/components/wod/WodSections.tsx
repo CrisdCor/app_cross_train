@@ -3,31 +3,40 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { Plus, Pencil } from "lucide-react";
-import { BLOCK_LABELS, BLOCK_ORDER, type WorkoutBlock } from "@/domain/Workout";
+import { SECTION_LABELS, SECTION_ORDER, type SectionType, type WorkBlock } from "@/domain/Workout";
 import { BlockContent } from "@/components/wod/BlockContent";
+import { RegisterTimeButton } from "@/components/wod/RegisterTimeButton";
 
 interface WodSectionsProps {
-  blocks: WorkoutBlock[];
+  blocks: WorkBlock[];
   programarHref?: string;
   isEditing?: boolean;
 }
 
 /**
- * Navegación horizontal por sección (calentamiento → fuerza → habilidad →
- * wod → accesorios) con scroll-snap nativo (funciona con el dedo en
- * móvil) más arrastre con el mouse (clic sostenido) en escritorio. No
- * cambia de día al llegar al final — eso solo pasa por el semanario.
- * Solo se navega/pagina entre las secciones que el Head Coach incluyó
- * ese día — un bloque sin programar no genera parada en el swipe ni
- * punto en el paginado.
+ * Navegación horizontal por sección (calentamiento → fuerza → levantamiento →
+ * gimnasia → metcon → wod → accesorios) con scroll-snap nativo (funciona con
+ * el dedo en móvil) más arrastre con el mouse (clic sostenido) en escritorio.
+ * No cambia de día al llegar al final — eso solo pasa por el semanario. Solo
+ * se navega/pagina entre las secciones que el Head Coach incluyó ese día —
+ * una sección sin bloques de trabajo no genera parada en el swipe ni punto en
+ * el paginado. Cada sección puede tener varios bloques de trabajo (ej. "WOD
+ * A"/"WOD B") que se muestran apilados; el botón "Registrar tiempo" aparece
+ * una sola vez por sección "wod", sin importar cuántos bloques tenga.
  */
 export function WodSections({ blocks, programarHref, isEditing = false }: WodSectionsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragState = useRef<{ startX: number; startScrollLeft: number } | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const sectionTypes = BLOCK_ORDER.filter((type) => blocks.some((b) => b.blockType === type));
+  const sectionTypes: SectionType[] = SECTION_ORDER.filter((type) =>
+    blocks.some((b) => b.sectionType === type)
+  );
   const clampedActiveIndex = Math.min(activeIndex, Math.max(sectionTypes.length - 1, 0));
+
+  function blocksFor(type: SectionType): WorkBlock[] {
+    return blocks.filter((b) => b.sectionType === type).sort((a, b) => a.orderIndex - b.orderIndex);
+  }
 
   function handleScroll() {
     const el = containerRef.current;
@@ -92,7 +101,7 @@ export function WodSections({ blocks, programarHref, isEditing = false }: WodSec
   return (
     <div className="relative flex flex-1 flex-col">
       <p className="label-heading px-5 pb-4 text-xs text-text-primary">
-        {BLOCK_LABELS[sectionTypes[clampedActiveIndex]]}
+        {SECTION_LABELS[sectionTypes[clampedActiveIndex]]}
       </p>
 
       <div
@@ -105,13 +114,11 @@ export function WodSections({ blocks, programarHref, isEditing = false }: WodSec
         className="no-scrollbar flex flex-1 snap-x snap-mandatory overflow-x-auto overscroll-x-contain cursor-grab active:cursor-grabbing"
       >
         {sectionTypes.map((type) => (
-          <div key={type} className="w-full shrink-0 snap-center px-5 pb-8">
-            <BlockContent
-              blockType={type}
-              block={blocks.find((b) => b.blockType === type)}
-              showRegisterButton
-              compact
-            />
+          <div key={type} className="flex w-full shrink-0 snap-center flex-col gap-6 px-5 pb-8">
+            {blocksFor(type).map((block, i) => (
+              <BlockContent key={i} block={block} />
+            ))}
+            {type === "wod" && <RegisterTimeButton />}
           </div>
         ))}
       </div>
@@ -123,7 +130,7 @@ export function WodSections({ blocks, programarHref, isEditing = false }: WodSec
               key={type}
               type="button"
               onClick={() => goTo(index)}
-              aria-label={`Ir a ${BLOCK_LABELS[type]}`}
+              aria-label={`Ir a ${SECTION_LABELS[type]}`}
               aria-current={index === clampedActiveIndex ? "true" : undefined}
               className="flex h-4 w-4 items-center justify-center"
             >

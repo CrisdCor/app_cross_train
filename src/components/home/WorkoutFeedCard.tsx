@@ -1,4 +1,4 @@
-import { blockLabel, type Workout } from "@/domain/Workout";
+import { SECTION_LABELS, formatSummaryLine, type Workout } from "@/domain/Workout";
 import { FeedPostActions } from "@/components/home/FeedPostActions";
 
 interface WorkoutFeedCardProps {
@@ -11,9 +11,9 @@ interface WorkoutFeedCardProps {
  * publicación de red social (reaccionar, comentar, ir a la publicación).
  */
 export function WorkoutFeedCard({ workout }: WorkoutFeedCardProps) {
-  const highlight = workout.getBlock("wod") ?? workout.blocks[0];
-  const movementsPreview = highlight?.movements.slice(0, 3) ?? [];
-  const hasMoreMovements = (highlight?.movements.length ?? 0) > movementsPreview.length;
+  const highlight = workout.blocksForSection("wod")[0] ?? workout.blocks[0];
+  const exercisesPreview = highlight?.exercises.slice(0, 3) ?? [];
+  const hasMoreExercises = (highlight?.exercises.length ?? 0) > exercisesPreview.length;
 
   return (
     <div className="border border-border p-5">
@@ -21,16 +21,14 @@ export function WorkoutFeedCard({ workout }: WorkoutFeedCardProps) {
 
       {highlight ? (
         <div className="mt-3">
-          <p className="label-heading text-xs text-text-muted">{blockLabel(highlight.blockType)}</p>
-          {highlight.format && (
-            <p className="mt-1 text-[15px] font-bold text-text-primary">{highlight.format}</p>
-          )}
-          {movementsPreview.length > 0 && (
+          <p className="label-heading text-xs text-text-muted">{SECTION_LABELS[highlight.sectionType]}</p>
+          <p className="mt-1 text-[15px] font-bold text-text-primary">{formatSummaryLine(highlight)}</p>
+          {exercisesPreview.length > 0 && (
             <p className="mt-1 text-sm text-text-secondary">
-              {movementsPreview
-                .map((m) => [m.reps, m.name].filter(Boolean).join(" "))
+              {exercisesPreview
+                .map((e) => [e.reps, e.name].filter(Boolean).join(" "))
                 .join(" · ")}
-              {hasMoreMovements && "…"}
+              {hasMoreExercises && "…"}
             </p>
           )}
         </div>

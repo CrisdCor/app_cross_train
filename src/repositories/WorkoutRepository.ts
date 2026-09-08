@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { WorkoutBlock, WorkoutRow } from "@/domain/Workout";
+import type { WorkBlock, WorkoutRow } from "@/domain/Workout";
 
 /** Único punto de acceso a la programación diaria — ambas RPC son SECURITY DEFINER. */
 export class WorkoutRepository {
@@ -15,7 +15,7 @@ export class WorkoutRepository {
     return data as WorkoutRow;
   }
 
-  async save(communityId: string, workoutDate: string, blocks: WorkoutBlock[]): Promise<boolean> {
+  async save(communityId: string, workoutDate: string, blocks: WorkBlock[]): Promise<boolean> {
     const { error } = await this.supabase.rpc("save_workout", {
       p_community_id: communityId,
       p_workout_date: workoutDate,

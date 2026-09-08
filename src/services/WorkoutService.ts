@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { WorkoutRepository } from "@/repositories/WorkoutRepository";
-import { Workout, type WorkoutBlock } from "@/domain/Workout";
+import { Workout, type WorkBlock } from "@/domain/Workout";
 
 export class WorkoutServiceError extends Error {}
 
@@ -18,7 +18,7 @@ export class WorkoutService {
     return Workout.fromRow(row);
   }
 
-  async save(communityId: string, workoutDate: string, blocks: WorkoutBlock[]): Promise<void> {
+  async save(communityId: string, workoutDate: string, blocks: WorkBlock[]): Promise<void> {
     const ok = await this.repository.save(communityId, workoutDate, blocks);
     if (!ok) {
       throw new WorkoutServiceError("No se pudo guardar la programación.");

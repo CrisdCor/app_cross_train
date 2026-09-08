@@ -3,75 +3,80 @@
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { WorkoutService } from "@/services/WorkoutService";
-import { BLOCK_ORDER, type BlockType, type WorkoutBlock } from "@/domain/Workout";
+import { SECTION_ORDER, type SectionType, type WorkBlock } from "@/domain/Workout";
 import { Button } from "@/components/ui/Button";
 import { SectionRow } from "@/components/wod/SectionRow";
 import { BlockEditorPanel } from "@/components/wod/BlockEditorPanel";
-import type { BlockForm, BlocksFormState, CategoryForm, MovementForm } from "@/components/wod/programWorkoutTypes";
+import type { SectionsFormState, WorkBlockForm } from "@/components/wod/programWorkoutTypes";
 
 const TRANSITION_MS = 300;
 
 interface ProgramWorkoutFormProps {
   communityId: string;
   workoutDate: string;
-  initialBlocks: WorkoutBlock[];
+  initialBlocks: WorkBlock[];
 }
 
-const EMPTY_MOVEMENT: MovementForm = { name: "", reps: "", weightType: "", weightValue: "" };
+/** "12" + "30" -> 750; vacío/ambos en blanco -> null. */
+function toSeconds(minutes: string, seconds: string): number | null {
+  if (!minutes.trim() && !seconds.trim()) return null;
+  const min = Number(minutes) || 0;
+  const sec = Number(seconds) || 0;
+  return min * 60 + sec;
+}
 
-const DEFAULT_WOD_CATEGORIES: CategoryForm[] = [
-  { name: "Principiante", weightMale: "", weightFemale: "" },
-  { name: "Intermedio", weightMale: "", weightFemale: "" },
-  { name: "Avanzado", weightMale: "", weightFemale: "" },
-  { name: "RX", weightMale: "", weightFemale: "" },
-];
+/** 750 -> { minutes: "12", seconds: "30" }; null -> partes vacías. */
+function fromSeconds(totalSeconds: number | null): { minutes: string; seconds: string } {
+  if (totalSeconds == null) return { minutes: "", seconds: "" };
+  return { minutes: String(Math.floor(totalSeconds / 60)), seconds: String(totalSeconds % 60) };
+}
 
-function buildInitialState(initialBlocks: WorkoutBlock[]): BlocksFormState {
-  return BLOCK_ORDER.reduce((acc, type) => {
-    const existing = initialBlocks.find((b) => b.blockType === type);
-    acc[type] = {
-      included: Boolean(existing),
-      format: existing?.format ?? "",
-      rounds: existing?.rounds != null ? String(existing.rounds) : "",
-      observations: existing?.observations ?? "",
-      movements:
-        existing && existing.movements.length > 0
-          ? existing.movements.map((m) => ({
-              name: m.name,
-              reps: m.reps,
-              weightType: m.weightType ?? "",
-              weightValue: m.weightValue,
-            }))
-          : [{ ...EMPTY_MOVEMENT }],
-      categories:
-        type === "wod"
-          ? existing && existing.categories.length > 0
-            ? existing.categories.map((c) => ({
-                name: c.name,
-                weightMale: c.weightMale,
-                weightFemale: c.weightFemale,
-              }))
-            : DEFAULT_WOD_CATEGORIES.map((c) => ({ ...c }))
-          : [],
-    };
+function blockFromRow(row: WorkBlock): WorkBlockForm {
+  const total = fromSeconds(row.totalSeconds);
+  const interval = fromSeconds(row.intervalSeconds);
+  return {
+    key: crypto.randomUUID(),
+    label: row.label,
+    format: row.format,
+    totalMinutes: total.minutes,
+    totalSecondsPart: total.seconds,
+    intervalMinutes: interval.minutes,
+    intervalSecondsPart: interval.seconds,
+    rounds: row.rounds != null ? String(row.rounds) : "1",
+    exercises: row.exercises.map((e) => ({
+      name: e.name,
+      reps: e.reps,
+      weights: e.weights.map((w) => ({ ...w })),
+    })),
+    observations: [...row.observations],
+  };
+}
+
+function buildInitialState(initialBlocks: WorkBlock[]): SectionsFormState {
+  return SECTION_ORDER.reduce((acc, type) => {
+    acc[type] = initialBlocks
+      .filter((b) => b.sectionType === type)
+      .sort((a, b) => a.orderIndex - b.orderIndex)
+      .map(blockFromRow);
     return acc;
-  }, {} as BlocksFormState);
+  }, {} as SectionsFormState);
 }
 
 /**
- * Lista de las 5 secciones de la programación de un día (`SectionRow`);
+ * Lista de las 7 secciones de la programación de un día (`SectionRow`);
  * tocar una abre `BlockEditorPanel`, un panel deslizante desde la derecha
- * con el detalle de esa sección para crearla/editarla. El guardado sigue
- * siendo uno solo para todo el día (`save_workout` reemplaza el día
+ * con todos los bloques de trabajo de esa sección (una sección puede
+ * tener varios, ej. "WOD A"/"WOD B") para crearlos/editarlos. El guardado
+ * sigue siendo uno solo para todo el día (`save_workout` reemplaza el día
  * completo), así que el botón "Guardar programación" vive en la lista,
- * no dentro de cada panel.
+ * no dentro del panel.
  */
 export function ProgramWorkoutForm({ communityId, workoutDate, initialBlocks }: ProgramWorkoutFormProps) {
-  const [blocks, setBlocks] = useState<BlocksFormState>(() => buildInitialState(initialBlocks));
+  const [sections, setSections] = useState<SectionsFormState>(() => buildInitialState(initialBlocks));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [panelType, setPanelType] = useState<BlockType | null>(null);
+  const [panelSection, setPanelSection] = useState<SectionType | null>(null);
   const [panelMounted, setPanelMounted] = useState(false);
   const [panelVisible, setPanelVisible] = useState(false);
   const closeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -88,12 +93,12 @@ export function ProgramWorkoutForm({ communityId, workoutDate, initialBlocks }: 
     };
   }, []);
 
-  function openPanel(type: BlockType) {
+  function openPanel(type: SectionType) {
     if (closeTimeout.current) {
       clearTimeout(closeTimeout.current);
       closeTimeout.current = null;
     }
-    setPanelType(type);
+    setPanelSection(type);
     setPanelMounted(true);
   }
 
@@ -101,60 +106,12 @@ export function ProgramWorkoutForm({ communityId, workoutDate, initialBlocks }: 
     setPanelVisible(false);
     closeTimeout.current = setTimeout(() => {
       setPanelMounted(false);
-      setPanelType(null);
+      setPanelSection(null);
     }, TRANSITION_MS);
   }
 
-  function updateBlock(type: BlockType, patch: Partial<BlockForm>) {
-    setBlocks((prev) => ({ ...prev, [type]: { ...prev[type], ...patch } }));
-  }
-
-  function updateMovement(type: BlockType, index: number, patch: Partial<MovementForm>) {
-    setBlocks((prev) => ({
-      ...prev,
-      [type]: {
-        ...prev[type],
-        movements: prev[type].movements.map((m, i) => (i === index ? { ...m, ...patch } : m)),
-      },
-    }));
-  }
-
-  function addMovement(type: BlockType) {
-    setBlocks((prev) => ({
-      ...prev,
-      [type]: { ...prev[type], movements: [...prev[type].movements, { ...EMPTY_MOVEMENT }] },
-    }));
-  }
-
-  function removeMovement(type: BlockType, index: number) {
-    setBlocks((prev) => ({
-      ...prev,
-      [type]: { ...prev[type], movements: prev[type].movements.filter((_, i) => i !== index) },
-    }));
-  }
-
-  function updateCategory(index: number, patch: Partial<CategoryForm>) {
-    setBlocks((prev) => ({
-      ...prev,
-      wod: {
-        ...prev.wod,
-        categories: prev.wod.categories.map((c, i) => (i === index ? { ...c, ...patch } : c)),
-      },
-    }));
-  }
-
-  function addCategory() {
-    setBlocks((prev) => ({
-      ...prev,
-      wod: { ...prev.wod, categories: [...prev.wod.categories, { name: "", weightMale: "", weightFemale: "" }] },
-    }));
-  }
-
-  function removeCategory(index: number) {
-    setBlocks((prev) => ({
-      ...prev,
-      wod: { ...prev.wod, categories: prev.wod.categories.filter((_, i) => i !== index) },
-    }));
+  function changeSectionBlocks(type: SectionType, blocks: WorkBlockForm[]) {
+    setSections((prev) => ({ ...prev, [type]: blocks }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -162,33 +119,39 @@ export function ProgramWorkoutForm({ communityId, workoutDate, initialBlocks }: 
     setLoading(true);
     setError(null);
 
-    const payload: WorkoutBlock[] = BLOCK_ORDER.filter((type) => blocks[type].included).map((type) => {
-      const b = blocks[type];
-      return {
-        blockType: type,
-        format: b.format.trim(),
-        rounds: b.rounds.trim() ? Number(b.rounds) : null,
-        observations: b.observations.trim(),
-        movements: b.movements
-          .filter((m) => m.name.trim())
-          .map((m) => ({
-            name: m.name.trim(),
-            reps: m.reps.trim(),
-            weightType: m.weightType || null,
-            weightValue: m.weightValue.trim(),
-          })),
-        categories:
-          type === "wod"
-            ? b.categories
-                .filter((c) => c.name.trim())
-                .map((c) => ({
-                  name: c.name.trim(),
-                  weightMale: c.weightMale.trim(),
-                  weightFemale: c.weightFemale.trim(),
-                }))
-            : [],
-      };
-    });
+    const payload: WorkBlock[] = SECTION_ORDER.flatMap((type) =>
+      sections[type].map((block, index) => {
+        const rounds = block.format === "for_time" ? Number(block.rounds) || 1 : null;
+        // totalSeconds: duración total en EMOM/AMRAP, cap opcional en For Time.
+        const totalSeconds = toSeconds(block.totalMinutes, block.totalSecondsPart);
+        const intervalSeconds =
+          block.format === "emom" ? toSeconds(block.intervalMinutes, block.intervalSecondsPart) : null;
+
+        return {
+          sectionType: type,
+          orderIndex: index,
+          label: block.label.trim(),
+          format: block.format,
+          totalSeconds,
+          intervalSeconds,
+          rounds,
+          exercises: block.exercises
+            .filter((ex) => ex.name.trim())
+            .map((ex) => ({
+              name: ex.name.trim(),
+              reps: ex.reps.trim(),
+              weights: ex.weights
+                .filter((w) => w.category.trim())
+                .map((w) => ({
+                  category: w.category.trim(),
+                  weightMale: w.weightMale.trim(),
+                  weightFemale: w.weightFemale.trim(),
+                })),
+            })),
+          observations: block.observations.map((o) => o.trim()).filter(Boolean),
+        };
+      })
+    );
 
     try {
       const service = new WorkoutService(createClient());
@@ -206,8 +169,8 @@ export function ProgramWorkoutForm({ communityId, workoutDate, initialBlocks }: 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col pt-6">
       <div className="flex flex-col border-t border-border">
-        {BLOCK_ORDER.map((type) => (
-          <SectionRow key={type} type={type} block={blocks[type]} onClick={() => openPanel(type)} />
+        {SECTION_ORDER.map((type) => (
+          <SectionRow key={type} type={type} blocks={sections[type]} onClick={() => openPanel(type)} />
         ))}
       </div>
 
@@ -224,18 +187,12 @@ export function ProgramWorkoutForm({ communityId, workoutDate, initialBlocks }: 
       <BlockEditorPanel
         mounted={panelMounted}
         visible={panelVisible}
-        type={panelType}
-        block={panelType ? blocks[panelType] : null}
+        sectionType={panelSection}
+        blocks={panelSection ? sections[panelSection] : []}
         onClose={closePanel}
-        onToggle={(included) => panelType && updateBlock(panelType, { included })}
-        onChange={(patch) => panelType && updateBlock(panelType, patch)}
-        onMovementChange={(i, patch) => panelType && updateMovement(panelType, i, patch)}
-        onAddMovement={() => panelType && addMovement(panelType)}
-        onRemoveMovement={(i) => panelType && removeMovement(panelType, i)}
-        onCategoryChange={panelType === "wod" ? updateCategory : undefined}
-        onAddCategory={panelType === "wod" ? addCategory : undefined}
-        onRemoveCategory={panelType === "wod" ? removeCategory : undefined}
+        onChangeBlocks={(blocks) => panelSection && changeSectionBlocks(panelSection, blocks)}
       />
     </form>
   );
 }
+

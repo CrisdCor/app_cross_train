@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import { Home, Timer, Users } from "lucide-react";
-import { BarbellIcon } from "@/components/icons/BarbellIcon";
+import { SquatIcon } from "@/components/icons/SquatIcon";
 
 const ITEMS = [
   { href: "/home", icon: Home, label: "Inicio" },
-  { href: "/wod", icon: BarbellIcon, label: "WOD" },
+  { href: "/wod", icon: SquatIcon, label: "WOD" },
   { href: "/temporizador", icon: Timer, label: "Cronómetro" },
   { href: "/comunidad", icon: Users, label: "Comunidad" },
 ] as const;

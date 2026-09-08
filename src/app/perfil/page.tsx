@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronLeft, ShieldCheck } from "lucide-react";
+import { ChevronLeft, CreditCard, ShieldCheck } from "lucide-react";
 import { requireSession } from "@/lib/session";
 import { LinkButton } from "@/components/ui/LinkButton";
 
@@ -66,6 +66,14 @@ export default async function ProfilePage() {
               Panel de administrador
               <ShieldCheck size={16} strokeWidth={1.5} />
             </LinkButton>
+          </div>
+        )}
+
+        {profile && (
+          <div className="mt-6 border border-border p-4">
+            <CreditCard size={20} strokeWidth={1.5} className="text-text-muted" />
+            <p className="label-heading mt-3 text-xs text-text-primary">Planes</p>
+            <p className="mt-1 text-xs text-text-muted">Próximamente</p>
           </div>
         )}
       </main>
