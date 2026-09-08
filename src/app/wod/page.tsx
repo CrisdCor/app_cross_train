@@ -48,7 +48,7 @@ export default async function WodPage({ searchParams }: WodPageProps) {
           </div>
           <main className="flex flex-1 flex-col pb-24">
             <WodSections
-              workout={workout}
+              blocks={workout?.blocks ?? []}
               programarHref={community.isOwner ? `/wod/programar?date=${selectedDate}` : undefined}
             />
           </main>

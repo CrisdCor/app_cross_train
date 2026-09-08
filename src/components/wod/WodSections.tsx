@@ -3,11 +3,11 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { BLOCK_LABELS, BLOCK_ORDER, type Workout } from "@/domain/Workout";
+import { BLOCK_LABELS, BLOCK_ORDER, type WorkoutBlock } from "@/domain/Workout";
 import { BlockContent } from "@/components/wod/BlockContent";
 
 interface WodSectionsProps {
-  workout: Workout | null;
+  blocks: WorkoutBlock[];
   programarHref?: string;
 }
 
@@ -17,7 +17,7 @@ interface WodSectionsProps {
  * móvil) más arrastre con el mouse (clic sostenido) en escritorio. No
  * cambia de día al llegar al final — eso solo pasa por el semanario.
  */
-export function WodSections({ workout, programarHref }: WodSectionsProps) {
+export function WodSections({ blocks, programarHref }: WodSectionsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragState = useRef<{ startX: number; startScrollLeft: number } | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -75,7 +75,12 @@ export function WodSections({ workout, programarHref }: WodSectionsProps) {
       >
         {BLOCK_ORDER.map((type) => (
           <div key={type} className="w-full shrink-0 snap-center px-5 pb-8">
-            <BlockContent blockType={type} block={workout?.getBlock(type)} showRegisterButton compact />
+            <BlockContent
+              blockType={type}
+              block={blocks.find((b) => b.blockType === type)}
+              showRegisterButton
+              compact
+            />
           </div>
         ))}
       </div>
