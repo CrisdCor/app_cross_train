@@ -2,13 +2,14 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 import { BLOCK_LABELS, BLOCK_ORDER, type WorkoutBlock } from "@/domain/Workout";
 import { BlockContent } from "@/components/wod/BlockContent";
 
 interface WodSectionsProps {
   blocks: WorkoutBlock[];
   programarHref?: string;
+  isEditing?: boolean;
 }
 
 /**
@@ -17,7 +18,7 @@ interface WodSectionsProps {
  * móvil) más arrastre con el mouse (clic sostenido) en escritorio. No
  * cambia de día al llegar al final — eso solo pasa por el semanario.
  */
-export function WodSections({ blocks, programarHref }: WodSectionsProps) {
+export function WodSections({ blocks, programarHref, isEditing = false }: WodSectionsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragState = useRef<{ startX: number; startScrollLeft: number } | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -88,10 +89,14 @@ export function WodSections({ blocks, programarHref }: WodSectionsProps) {
       {programarHref && (
         <Link
           href={programarHref}
-          aria-label="Programar"
+          aria-label={isEditing ? "Editar programación" : "Programar"}
           className="fixed bottom-[92px] right-5 z-20 flex h-[52px] w-[52px] items-center justify-center bg-black"
         >
-          <Plus size={24} strokeWidth={1.5} className="text-white" />
+          {isEditing ? (
+            <Pencil size={22} strokeWidth={1.5} className="text-white" />
+          ) : (
+            <Plus size={24} strokeWidth={1.5} className="text-white" />
+          )}
         </Link>
       )}
     </div>

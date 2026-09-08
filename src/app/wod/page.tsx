@@ -3,7 +3,7 @@ import { requireSession } from "@/lib/session";
 import { NotificationService } from "@/services/NotificationService";
 import { CommunityService } from "@/services/CommunityService";
 import { WorkoutService } from "@/services/WorkoutService";
-import { todayIso } from "@/lib/dates";
+import { todayIso, isWithinCurrentWeek } from "@/lib/dates";
 import { TopHeader } from "@/components/layout/TopHeader";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { DayTabs } from "@/components/wod/DayTabs";
@@ -17,12 +17,21 @@ interface WodPageProps {
 
 export default async function WodPage({ searchParams }: WodPageProps) {
   const { date } = await searchParams;
-  const selectedDate = date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : todayIso();
+  const requestedDate = date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : todayIso();
 
   const { profile } = await requireSession();
   const supabase = await createClient();
   const notifications = await new NotificationService(supabase).list();
   const community = await new CommunityService(supabase).getMyCommunity();
+
+  // Los atletas solo pueden ver la programación de la semana actual; el
+  // Head Coach (dueño de la comunidad) puede navegar a cualquier fecha
+  // que haya programado, hasta un mes por delante.
+  const selectedDate =
+    community && !community.isOwner && !isWithinCurrentWeek(requestedDate)
+      ? todayIso()
+      : requestedDate;
+
   const workout = community
     ? await new WorkoutService(supabase).getForDate(community.communityId, selectedDate)
     : null;
@@ -50,6 +59,7 @@ export default async function WodPage({ searchParams }: WodPageProps) {
             <WodSections
               blocks={workout?.blocks ?? []}
               programarHref={community.isOwner ? `/wod/programar?date=${selectedDate}` : undefined}
+              isEditing={Boolean(workout && workout.blocks.length > 0)}
             />
           </main>
         </>

@@ -27,3 +27,17 @@ export function weekOf(isoDate: string): { iso: string; label: string; dayNumber
     return { iso: toIso(date), label, dayNumber: String(date.getUTCDate()).padStart(2, "0") };
   });
 }
+
+/** Fecha máxima (YYYY-MM-DD) hasta la que el Head Coach puede programar: hoy + 1 mes. */
+export function maxProgramDate(): string {
+  const date = new Date(`${todayIso()}T00:00:00Z`);
+  date.setUTCMonth(date.getUTCMonth() + 1);
+  return toIso(date);
+}
+
+/** True si `isoDate` cae dentro de la semana (lunes a domingo) que contiene la fecha de hoy. */
+export function isWithinCurrentWeek(isoDate: string): boolean {
+  const today = todayIso();
+  const days = weekOf(today);
+  return days.some((d) => d.iso === isoDate);
+}

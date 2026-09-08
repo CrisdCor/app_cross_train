@@ -1,32 +1,44 @@
-import Link from "next/link";
-import type { Workout } from "@/domain/Workout";
-import { BlockContent } from "@/components/wod/BlockContent";
+import { blockLabel, type Workout } from "@/domain/Workout";
+import { FeedPostActions } from "@/components/home/FeedPostActions";
 
 interface WorkoutFeedCardProps {
   workout: Workout;
 }
 
-/** Tarjeta de feed en /home con la programación de hoy, bloque por bloque. */
+/**
+ * Publicación del feed de /home con un resumen breve de la programación de
+ * hoy (no el WOD completo — para eso está /wod) y las acciones de una
+ * publicación de red social (reaccionar, comentar, ir a la publicación).
+ */
 export function WorkoutFeedCard({ workout }: WorkoutFeedCardProps) {
-  return (
-    <div className="flex flex-col gap-5 border border-border p-5">
-      <div className="flex items-center justify-between">
-        <p className="label-heading text-sm text-text-primary">Programación de hoy</p>
-        <Link
-          href="/wod"
-          className="label-heading text-xs text-text-primary underline underline-offset-4"
-        >
-          Ver completo
-        </Link>
-      </div>
+  const highlight = workout.getBlock("wod") ?? workout.blocks[0];
+  const movementsPreview = highlight?.movements.slice(0, 3) ?? [];
+  const hasMoreMovements = (highlight?.movements.length ?? 0) > movementsPreview.length;
 
-      <div className="flex flex-col gap-5">
-        {workout.blocks.map((block) => (
-          <div key={block.blockType} className="border-t border-border pt-5 first:border-t-0 first:pt-0">
-            <BlockContent blockType={block.blockType} block={block} />
-          </div>
-        ))}
-      </div>
+  return (
+    <div className="border border-border p-5">
+      <p className="label-heading text-sm text-text-primary">Programación de hoy</p>
+
+      {highlight ? (
+        <div className="mt-3">
+          <p className="label-heading text-xs text-text-muted">{blockLabel(highlight.blockType)}</p>
+          {highlight.format && (
+            <p className="mt-1 text-[15px] font-bold text-text-primary">{highlight.format}</p>
+          )}
+          {movementsPreview.length > 0 && (
+            <p className="mt-1 text-sm text-text-secondary">
+              {movementsPreview
+                .map((m) => [m.reps, m.name].filter(Boolean).join(" "))
+                .join(" · ")}
+              {hasMoreMovements && "…"}
+            </p>
+          )}
+        </div>
+      ) : (
+        <p className="mt-3 text-sm text-text-muted">Aún no hay contenido publicado hoy.</p>
+      )}
+
+      <FeedPostActions href="/wod" />
     </div>
   );
 }

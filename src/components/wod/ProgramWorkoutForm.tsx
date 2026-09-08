@@ -1,48 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { WorkoutService } from "@/services/WorkoutService";
-import {
-  BLOCK_FORMAT_HINTS,
-  BLOCK_LABELS,
-  BLOCK_ORDER,
-  type BlockType,
-  type WorkoutBlock,
-} from "@/domain/Workout";
-import { Input } from "@/components/ui/Input";
-import { Button, buttonClassName } from "@/components/ui/Button";
+import { BLOCK_ORDER, type BlockType, type WorkoutBlock } from "@/domain/Workout";
+import { Button } from "@/components/ui/Button";
+import { SectionRow } from "@/components/wod/SectionRow";
+import { BlockEditorPanel } from "@/components/wod/BlockEditorPanel";
+import type { BlockForm, BlocksFormState, CategoryForm, MovementForm } from "@/components/wod/programWorkoutTypes";
+
+const TRANSITION_MS = 300;
 
 interface ProgramWorkoutFormProps {
   communityId: string;
   workoutDate: string;
   initialBlocks: WorkoutBlock[];
 }
-
-interface MovementForm {
-  name: string;
-  reps: string;
-  weightType: "" | "fixed" | "percentage";
-  weightValue: string;
-}
-
-interface CategoryForm {
-  name: string;
-  weightMale: string;
-  weightFemale: string;
-}
-
-interface BlockForm {
-  included: boolean;
-  format: string;
-  rounds: string;
-  observations: string;
-  movements: MovementForm[];
-  categories: CategoryForm[];
-}
-
-type BlocksFormState = Record<BlockType, BlockForm>;
 
 const EMPTY_MOVEMENT: MovementForm = { name: "", reps: "", weightType: "", weightValue: "" };
 
@@ -85,10 +58,52 @@ function buildInitialState(initialBlocks: WorkoutBlock[]): BlocksFormState {
   }, {} as BlocksFormState);
 }
 
+/**
+ * Lista de las 5 secciones de la programación de un día (`SectionRow`);
+ * tocar una abre `BlockEditorPanel`, un panel deslizante desde la derecha
+ * con el detalle de esa sección para crearla/editarla. El guardado sigue
+ * siendo uno solo para todo el día (`save_workout` reemplaza el día
+ * completo), así que el botón "Guardar programación" vive en la lista,
+ * no dentro de cada panel.
+ */
 export function ProgramWorkoutForm({ communityId, workoutDate, initialBlocks }: ProgramWorkoutFormProps) {
   const [blocks, setBlocks] = useState<BlocksFormState>(() => buildInitialState(initialBlocks));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [panelType, setPanelType] = useState<BlockType | null>(null);
+  const [panelMounted, setPanelMounted] = useState(false);
+  const [panelVisible, setPanelVisible] = useState(false);
+  const closeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!panelMounted) return;
+    const raf = requestAnimationFrame(() => setPanelVisible(true));
+    return () => cancelAnimationFrame(raf);
+  }, [panelMounted]);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeout.current) clearTimeout(closeTimeout.current);
+    };
+  }, []);
+
+  function openPanel(type: BlockType) {
+    if (closeTimeout.current) {
+      clearTimeout(closeTimeout.current);
+      closeTimeout.current = null;
+    }
+    setPanelType(type);
+    setPanelMounted(true);
+  }
+
+  function closePanel() {
+    setPanelVisible(false);
+    closeTimeout.current = setTimeout(() => {
+      setPanelMounted(false);
+      setPanelType(null);
+    }, TRANSITION_MS);
+  }
 
   function updateBlock(type: BlockType, patch: Partial<BlockForm>) {
     setBlocks((prev) => ({ ...prev, [type]: { ...prev[type], ...patch } }));
@@ -189,194 +204,38 @@ export function ProgramWorkoutForm({ communityId, workoutDate, initialBlocks }: 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6 pt-6">
-      {BLOCK_ORDER.map((type) => (
-        <BlockEditor
-          key={type}
-          type={type}
-          block={blocks[type]}
-          onToggle={(included) => updateBlock(type, { included })}
-          onChange={(patch) => updateBlock(type, patch)}
-          onMovementChange={(i, patch) => updateMovement(type, i, patch)}
-          onAddMovement={() => addMovement(type)}
-          onRemoveMovement={(i) => removeMovement(type, i)}
-          onCategoryChange={type === "wod" ? updateCategory : undefined}
-          onAddCategory={type === "wod" ? addCategory : undefined}
-          onRemoveCategory={type === "wod" ? removeCategory : undefined}
-        />
-      ))}
+    <form onSubmit={handleSubmit} className="flex flex-col pt-6">
+      <div className="flex flex-col border-t border-border">
+        {BLOCK_ORDER.map((type) => (
+          <SectionRow key={type} type={type} block={blocks[type]} onClick={() => openPanel(type)} />
+        ))}
+      </div>
 
       {error && (
-        <p className="text-sm text-error" role="alert">
+        <p className="mt-6 text-sm text-error" role="alert">
           {error}
         </p>
       )}
 
-      <Button type="submit" disabled={loading}>
+      <Button type="submit" className="mt-6" disabled={loading}>
         {loading ? "Guardando…" : "Guardar programación"}
       </Button>
+
+      <BlockEditorPanel
+        mounted={panelMounted}
+        visible={panelVisible}
+        type={panelType}
+        block={panelType ? blocks[panelType] : null}
+        onClose={closePanel}
+        onToggle={(included) => panelType && updateBlock(panelType, { included })}
+        onChange={(patch) => panelType && updateBlock(panelType, patch)}
+        onMovementChange={(i, patch) => panelType && updateMovement(panelType, i, patch)}
+        onAddMovement={() => panelType && addMovement(panelType)}
+        onRemoveMovement={(i) => panelType && removeMovement(panelType, i)}
+        onCategoryChange={panelType === "wod" ? updateCategory : undefined}
+        onAddCategory={panelType === "wod" ? addCategory : undefined}
+        onRemoveCategory={panelType === "wod" ? removeCategory : undefined}
+      />
     </form>
-  );
-}
-
-interface BlockEditorProps {
-  type: BlockType;
-  block: BlockForm;
-  onToggle: (included: boolean) => void;
-  onChange: (patch: Partial<BlockForm>) => void;
-  onMovementChange: (index: number, patch: Partial<MovementForm>) => void;
-  onAddMovement: () => void;
-  onRemoveMovement: (index: number) => void;
-  onCategoryChange?: (index: number, patch: Partial<CategoryForm>) => void;
-  onAddCategory?: () => void;
-  onRemoveCategory?: (index: number) => void;
-}
-
-function BlockEditor({
-  type,
-  block,
-  onToggle,
-  onChange,
-  onMovementChange,
-  onAddMovement,
-  onRemoveMovement,
-  onCategoryChange,
-  onAddCategory,
-  onRemoveCategory,
-}: BlockEditorProps) {
-  return (
-    <div className="border border-border">
-      <label className="flex items-center justify-between gap-3 border-b border-border bg-white px-4 py-3">
-        <span className="label-heading text-sm text-text-primary">{BLOCK_LABELS[type]}</span>
-        <input
-          type="checkbox"
-          checked={block.included}
-          onChange={(e) => onToggle(e.target.checked)}
-          className="h-5 w-5 accent-black"
-        />
-      </label>
-
-      {block.included && (
-        <div className="flex flex-col gap-4 p-4">
-          <div className="flex gap-3">
-            <Input
-              placeholder={BLOCK_FORMAT_HINTS[type]}
-              value={block.format}
-              onChange={(e) => onChange({ format: e.target.value })}
-              className="flex-[2]"
-            />
-            <Input
-              type="number"
-              min={0}
-              placeholder="Rondas"
-              value={block.rounds}
-              onChange={(e) => onChange({ rounds: e.target.value })}
-              className="flex-1"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            {block.movements.map((movement, i) => (
-              <div key={i} className="flex flex-col gap-2 border border-border p-3">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Ejercicio"
-                    value={movement.name}
-                    onChange={(e) => onMovementChange(i, { name: e.target.value })}
-                    className="flex-[2]"
-                  />
-                  <Input
-                    placeholder="Reps"
-                    value={movement.reps}
-                    onChange={(e) => onMovementChange(i, { reps: e.target.value })}
-                    className="flex-1"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <select
-                    value={movement.weightType}
-                    onChange={(e) =>
-                      onMovementChange(i, { weightType: e.target.value as MovementForm["weightType"] })
-                    }
-                    className="h-[48px] flex-1 border border-border bg-white px-3 text-sm text-text-primary outline-none focus:border-black"
-                  >
-                    <option value="">Sin peso</option>
-                    <option value="fixed">Peso fijo</option>
-                    <option value="percentage">% RM</option>
-                  </select>
-                  <Input
-                    placeholder={movement.weightType === "percentage" ? "Ej. 80%" : "Ej. 40 kg"}
-                    value={movement.weightValue}
-                    onChange={(e) => onMovementChange(i, { weightValue: e.target.value })}
-                    disabled={!movement.weightType}
-                    className="flex-1"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => onRemoveMovement(i)}
-                    aria-label="Quitar ejercicio"
-                    className="flex h-[48px] w-[48px] shrink-0 items-center justify-center border border-border"
-                  >
-                    <Trash2 size={16} strokeWidth={1.5} className="text-text-primary" />
-                  </button>
-                </div>
-              </div>
-            ))}
-            <button type="button" onClick={onAddMovement} className={buttonClassName("outline")}>
-              Agregar ejercicio
-              <Plus size={16} strokeWidth={1.5} />
-            </button>
-          </div>
-
-          <textarea
-            placeholder="Observaciones (ej. descansa 15 seg. por ronda)"
-            value={block.observations}
-            onChange={(e) => onChange({ observations: e.target.value })}
-            rows={2}
-            className="w-full resize-none border border-border bg-white p-3 text-sm text-text-primary placeholder:text-text-muted outline-none transition-colors focus:border-black"
-          />
-
-          {type === "wod" && onCategoryChange && onAddCategory && onRemoveCategory && (
-            <div className="flex flex-col gap-2">
-              <p className="label-heading text-xs text-text-muted">Pesos por categoría</p>
-              {block.categories.map((category, i) => (
-                <div key={i} className="flex gap-2">
-                  <Input
-                    placeholder="Categoría"
-                    value={category.name}
-                    onChange={(e) => onCategoryChange(i, { name: e.target.value })}
-                    className="flex-[2]"
-                  />
-                  <Input
-                    placeholder="Hombre"
-                    value={category.weightMale}
-                    onChange={(e) => onCategoryChange(i, { weightMale: e.target.value })}
-                    className="flex-1"
-                  />
-                  <Input
-                    placeholder="Mujer"
-                    value={category.weightFemale}
-                    onChange={(e) => onCategoryChange(i, { weightFemale: e.target.value })}
-                    className="flex-1"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => onRemoveCategory(i)}
-                    aria-label="Quitar categoría"
-                    className="flex h-[48px] w-[48px] shrink-0 items-center justify-center border border-border"
-                  >
-                    <Trash2 size={16} strokeWidth={1.5} className="text-text-primary" />
-                  </button>
-                </div>
-              ))}
-              <button type="button" onClick={onAddCategory} className={buttonClassName("outline")}>
-                Agregar categoría
-                <Plus size={16} strokeWidth={1.5} />
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
   );
 }
