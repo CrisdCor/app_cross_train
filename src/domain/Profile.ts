@@ -79,11 +79,12 @@ export class Profile {
   }
 
   /**
-   * Solo aplica a Head Coach por ahora: nombre y biografía son obligatorios
-   * para que su perfil público (visible a atletas) tenga sentido.
+   * Aplica a Head Coach y Atleta: nombre y biografía son obligatorios para
+   * que el resto de su comunidad pueda conocerlos. El Administrador no
+   * tiene perfil público, así que siempre cuenta como completo.
    */
   get isProfileComplete(): boolean {
-    if (!this.isHeadCoach) return true;
+    if (this.isAdmin) return true;
     return this.fullName.trim().length > 0 && this.bio.trim().length > 0;
   }
 

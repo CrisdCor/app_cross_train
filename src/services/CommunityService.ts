@@ -29,6 +29,32 @@ interface SearchHeadCoachRow {
   community_name: string;
 }
 
+export interface MyCommunity {
+  communityId: string;
+  communityName: string;
+  isOwner: boolean;
+}
+
+export interface CommunityMember {
+  id: string;
+  username: string;
+  fullName: string;
+  avatarUrl: string | null;
+}
+
+interface MyCommunityRow {
+  community_id: string;
+  community_name: string;
+  is_owner: boolean;
+}
+
+interface CommunityMemberRow {
+  id: string;
+  username: string;
+  full_name: string;
+  avatar_url: string | null;
+}
+
 /**
  * Búsqueda de Head Coaches, su perfil público y el flujo de solicitud de
  * ingreso a su comunidad. Toda la escritura pasa por `request_join_community`
@@ -102,6 +128,37 @@ export class CommunityService {
       throw new CommunityServiceError("Ya tienes una solicitud pendiente con esta comunidad.");
     }
     throw new CommunityServiceError("No se pudo enviar la solicitud.");
+  }
+
+  /** La comunidad del usuario actual: la que dirige (Head Coach) o aquella a la que pertenece activamente (Atleta). */
+  async getMyCommunity(): Promise<MyCommunity | null> {
+    const { data, error } = await this.supabase.rpc("get_my_community");
+
+    if (error || !data) return null;
+    const row = (data as MyCommunityRow[])[0];
+    if (!row) return null;
+
+    return {
+      communityId: row.community_id,
+      communityName: row.community_name,
+      isOwner: row.is_owner,
+    };
+  }
+
+  async listCommunityMembers(communityId: string, query = ""): Promise<CommunityMember[]> {
+    const { data, error } = await this.supabase.rpc("list_community_members", {
+      p_community_id: communityId,
+      p_query: query.trim(),
+    });
+
+    if (error || !data) return [];
+
+    return (data as CommunityMemberRow[]).map((row) => ({
+      id: row.id,
+      username: row.username,
+      fullName: row.full_name,
+      avatarUrl: row.avatar_url,
+    }));
   }
 }
 

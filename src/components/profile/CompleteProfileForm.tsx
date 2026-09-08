@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/Button";
 
 interface CompleteProfileFormProps {
   userId: string;
+  showProgramField: boolean;
+  bioPlaceholder: string;
   initialFirstName: string;
   initialLastName: string;
   initialBio: string;
@@ -19,6 +21,8 @@ interface CompleteProfileFormProps {
 
 export function CompleteProfileForm({
   userId,
+  showProgramField,
+  bioPlaceholder,
   initialFirstName,
   initialLastName,
   initialBio,
@@ -87,13 +91,15 @@ export function CompleteProfileForm({
           onChange={(e) => setLastName(e.target.value)}
           required
         />
-        <Input
-          placeholder="Nombre de tu programación (opcional)"
-          value={programName}
-          onChange={(e) => setProgramName(e.target.value)}
-        />
+        {showProgramField && (
+          <Input
+            placeholder="Nombre de tu programación (opcional)"
+            value={programName}
+            onChange={(e) => setProgramName(e.target.value)}
+          />
+        )}
         <textarea
-          placeholder="Biografía: cuéntales a tus atletas sobre tu plan"
+          placeholder={bioPlaceholder}
           value={bio}
           onChange={(e) => setBio(e.target.value)}
           rows={5}

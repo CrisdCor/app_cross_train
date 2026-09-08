@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, ShieldCheck } from "lucide-react";
 import { requireSession } from "@/lib/session";
-import { SignOutButton } from "@/components/home/SignOutButton";
 import { LinkButton } from "@/components/ui/LinkButton";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +12,7 @@ export default async function ProfilePage() {
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="flex items-center gap-3 px-5 pb-4 pt-6">
-        <Link href="/home" aria-label="Volver">
+        <Link href="/cuenta" aria-label="Volver">
           <ChevronLeft size={22} strokeWidth={1.5} className="text-text-primary" />
         </Link>
         <h1 className="label-heading text-lg text-text-primary">Perfil</h1>
@@ -43,7 +42,7 @@ export default async function ProfilePage() {
           </div>
         )}
 
-        {profile?.isHeadCoach && (
+        {profile && !profile.isAdmin && (
           <div className="mt-6">
             <LinkButton
               href="/perfil/completar"
@@ -53,7 +52,9 @@ export default async function ProfilePage() {
             </LinkButton>
             {!profile.isProfileComplete && (
               <p className="mt-2 text-xs text-text-muted">
-                Tus atletas verán tu perfil público solo cuando lo completes.
+                {profile.isHeadCoach
+                  ? "Tus atletas verán tu perfil público solo cuando lo completes."
+                  : "Completa tu perfil para que tu comunidad te conozca."}
               </p>
             )}
           </div>
@@ -62,15 +63,11 @@ export default async function ProfilePage() {
         {profile?.isAdmin && (
           <div className="mt-6">
             <LinkButton href="/admin" variant="outline">
-              <ShieldCheck size={16} strokeWidth={1.5} />
               Panel de administrador
+              <ShieldCheck size={16} strokeWidth={1.5} />
             </LinkButton>
           </div>
         )}
-
-        <div className="mt-10">
-          <SignOutButton />
-        </div>
       </main>
     </div>
   );

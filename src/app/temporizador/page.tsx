@@ -15,7 +15,7 @@ export default async function TimerPage() {
     <div className="flex min-h-dvh flex-col">
       <TopHeader
         greetingName={profile?.greetingName ?? ""}
-        hasUnreadNotifications={notifications.some((n) => !n.isRead)}
+        unreadCount={notifications.filter((n) => !n.isRead).length}
       />
 
       <main className="flex flex-1 flex-col px-5 pb-24 pt-2">

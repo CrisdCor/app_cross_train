@@ -9,11 +9,15 @@ export const dynamic = "force-dynamic";
 export default async function CompleteProfilePage() {
   const { user, profile } = await requireSession();
 
-  if (!profile || !profile.isHeadCoach) {
+  if (!profile || profile.isAdmin) {
     redirect("/perfil");
   }
 
   const [firstName, ...rest] = profile.fullName.trim().split(/\s+/).filter(Boolean);
+
+  const bioPlaceholder = profile.isHeadCoach
+    ? "Biografía: cuéntales a tus atletas sobre tu plan"
+    : "Biografía: cuéntale a tu comunidad un poco sobre ti";
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -28,6 +32,8 @@ export default async function CompleteProfilePage() {
       <main className="flex-1 px-5 pb-10 pt-6">
         <CompleteProfileForm
           userId={user.id}
+          showProgramField={profile.isHeadCoach}
+          bioPlaceholder={bioPlaceholder}
           initialFirstName={firstName ?? ""}
           initialLastName={rest.join(" ")}
           initialBio={profile.bio}
