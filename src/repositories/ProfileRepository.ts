@@ -1,11 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { Profile, type ProfileRow } from "@/domain/Profile";
+import { Profile, type Gender, type ProfileRow } from "@/domain/Profile";
 
 export interface ProfileUpdateInput {
   fullName?: string;
   bio?: string;
   programName?: string;
   avatarUrl?: string;
+  gender?: Gender;
 }
 
 /**
@@ -48,6 +49,7 @@ export class ProfileRepository {
     if (input.bio !== undefined) patch.bio = input.bio;
     if (input.programName !== undefined) patch.program_name = input.programName;
     if (input.avatarUrl !== undefined) patch.avatar_url = input.avatarUrl;
+    if (input.gender !== undefined) patch.gender = input.gender;
 
     const { data } = await this.supabase
       .from("profiles")

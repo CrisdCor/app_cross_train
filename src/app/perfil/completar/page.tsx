@@ -39,6 +39,7 @@ export default async function CompleteProfilePage() {
           initialBio={profile.bio}
           initialProgramName={profile.programName}
           initialAvatarUrl={profile.avatarUrl}
+          initialGender={profile.gender}
           initials={profile.initials}
         />
       </main>

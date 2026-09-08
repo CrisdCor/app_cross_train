@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Settings, X, User, UserStar, ArrowRight } from "lucide-react";
+import { Settings, X, User, UserStar, ArrowRight, CreditCard } from "lucide-react";
 import { requireSession } from "@/lib/session";
 import { SignOutButton } from "@/components/home/SignOutButton";
 
@@ -51,6 +51,11 @@ export default async function AccountMenuPage() {
               Administra tus datos y la configuración de tu cuenta
             </p>
           </Link>
+          <div className="border border-border p-4">
+            <CreditCard size={20} strokeWidth={1.5} className="text-text-muted" />
+            <p className="label-heading mt-3 text-xs text-text-primary">Planes</p>
+            <p className="mt-1 text-xs text-text-muted">Próximamente</p>
+          </div>
         </div>
 
         <div className="mt-8">

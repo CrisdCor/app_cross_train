@@ -1,11 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { clsx } from "clsx";
 import { createClient } from "@/lib/supabase/client";
 import { ProfileService } from "@/services/ProfileService";
+import { Profile, type Gender } from "@/domain/Profile";
 import { AvatarUploader } from "@/components/profile/AvatarUploader";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+
+const GENDER_OPTIONS: Gender[] = ["male", "female"];
 
 interface CompleteProfileFormProps {
   userId: string;
@@ -16,6 +20,7 @@ interface CompleteProfileFormProps {
   initialBio: string;
   initialProgramName: string;
   initialAvatarUrl: string | null;
+  initialGender: Gender | null;
   initials: string;
 }
 
@@ -28,6 +33,7 @@ export function CompleteProfileForm({
   initialBio,
   initialProgramName,
   initialAvatarUrl,
+  initialGender,
   initials,
 }: CompleteProfileFormProps) {
   const [firstName, setFirstName] = useState(initialFirstName);
@@ -35,14 +41,15 @@ export function CompleteProfileForm({
   const [bio, setBio] = useState(initialBio);
   const [programName, setProgramName] = useState(initialProgramName);
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
+  const [gender, setGender] = useState<Gender | null>(initialGender);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!firstName.trim() || !lastName.trim() || !bio.trim()) {
-      setError("Nombre, apellidos y biografía son obligatorios.");
+    if (!firstName.trim() || !lastName.trim() || !bio.trim() || !gender) {
+      setError("Nombre, apellidos, sexo y biografía son obligatorios.");
       return;
     }
 
@@ -57,6 +64,7 @@ export function CompleteProfileForm({
         fullName,
         bio: bio.trim(),
         programName: programName.trim(),
+        gender,
         ...(avatarUrl ? { avatarUrl } : {}),
       });
       // Navegación dura a propósito: /perfil es un Server Component que
@@ -91,6 +99,25 @@ export function CompleteProfileForm({
           onChange={(e) => setLastName(e.target.value)}
           required
         />
+        <div className="flex flex-col gap-2">
+          <p className="label-heading text-xs text-text-muted">Sexo</p>
+          <div className="flex gap-2">
+            {GENDER_OPTIONS.map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setGender(option)}
+                aria-pressed={gender === option}
+                className={clsx(
+                  "h-[48px] flex-1 border border-black text-sm font-bold uppercase tracking-wide transition-opacity active:opacity-70",
+                  gender === option ? "bg-black text-white" : "bg-white text-black"
+                )}
+              >
+                {Profile.GENDER_LABEL[option]}
+              </button>
+            ))}
+          </div>
+        </div>
         {showProgramField && (
           <Input
             placeholder="Nombre de tu programación (opcional)"

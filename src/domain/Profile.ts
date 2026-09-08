@@ -1,5 +1,7 @@
 export type Role = "admin" | "head_coach" | "athlete";
 
+export type Gender = "male" | "female";
+
 export interface ProfileRow {
   id: string;
   role: string;
@@ -9,6 +11,7 @@ export interface ProfileRow {
   avatar_url: string | null;
   bio: string;
   program_name: string;
+  gender: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -28,6 +31,7 @@ export class Profile {
     public readonly avatarUrl: string | null,
     public readonly bio: string,
     public readonly programName: string,
+    public readonly gender: Gender | null,
     public readonly createdAt: string,
     public readonly updatedAt: string
   ) {}
@@ -42,6 +46,7 @@ export class Profile {
       row.avatar_url,
       row.bio,
       row.program_name,
+      row.gender as Gender | null,
       row.created_at,
       row.updated_at
     );
@@ -85,7 +90,7 @@ export class Profile {
    */
   get isProfileComplete(): boolean {
     if (this.isAdmin) return true;
-    return this.fullName.trim().length > 0 && this.bio.trim().length > 0;
+    return this.fullName.trim().length > 0 && this.bio.trim().length > 0 && this.gender != null;
   }
 
   static readonly ROLE_LABEL: Record<Role, string> = {
@@ -96,5 +101,14 @@ export class Profile {
 
   get roleLabel(): string {
     return Profile.ROLE_LABEL[this.role];
+  }
+
+  static readonly GENDER_LABEL: Record<Gender, string> = {
+    male: "Hombre",
+    female: "Mujer",
+  };
+
+  get genderLabel(): string | null {
+    return this.gender ? Profile.GENDER_LABEL[this.gender] : null;
   }
 }
