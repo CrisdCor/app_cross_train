@@ -15,8 +15,8 @@ export function PasswordInput({
       <input
         type={visible ? "text" : "password"}
         className={clsx(
-          "h-[42px] w-full rounded-control border border-border bg-surface-2 pl-4 pr-12 text-[15px] text-text-primary placeholder:text-text-muted",
-          "outline-none transition-colors focus:border-text-secondary",
+          "h-[48px] w-full border border-border bg-white pl-4 pr-12 text-[15px] text-text-primary placeholder:text-text-muted",
+          "outline-none transition-colors focus:border-black",
           className
         )}
         {...props}
@@ -24,11 +24,11 @@ export function PasswordInput({
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
-        className="absolute right-0 top-0 flex h-[42px] w-12 items-center justify-center text-text-muted"
+        className="absolute right-0 top-0 flex h-[48px] w-12 items-center justify-center text-text-secondary"
         aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
         tabIndex={-1}
       >
-        {visible ? <EyeOff size={18} /> : <Eye size={18} />}
+        {visible ? <EyeOff size={18} strokeWidth={1.5} /> : <Eye size={18} strokeWidth={1.5} />}
       </button>
     </div>
   );

@@ -1,55 +1,56 @@
 @import "tailwindcss";
 
 :root {
-  /* Base surfaces (from style_ui palette) */
-  --color-bg: #000000;
-  --color-surface-1: #171717;
-  --color-surface-2: #1b1b1b;
-  --color-surface-3: #232324;
-  --color-border: #3a3a3c;
+  /* Superficies: blanco puro, sin grises de fondo */
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-border: #e5e5e5;
+  --color-border-strong: #000000;
 
-  /* Text */
-  --color-text-primary: #f5f5f5;
-  --color-text-secondary: #a1a1a6;
-  --color-text-muted: #6b6b70;
+  /* Texto */
+  --color-text-primary: #000000;
+  --color-text-secondary: #6b6b6b;
+  --color-text-muted: #9b9b9b;
 
-  /* Accents */
-  --color-accent-lime: #dfff17;
-  --color-accent-orange: #ff4117;
+  /* Blanco / negro puros para botones y acentos de marca */
+  --color-black: #000000;
+  --color-white: #ffffff;
 
-  /* Radii / motion */
-  --radius-card: 1.25rem;
-  --radius-control: 0.375rem;
+  /* Estados funcionales (uso puntual, nunca decorativo) */
+  --color-success: #1e7b4d;
+  --color-error: #c81e2b;
+
+  /* Sin bordes redondeados en ningún control */
+  --radius: 0px;
   --ease-app: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @theme inline {
   --color-bg: var(--color-bg);
-  --color-surface-1: var(--color-surface-1);
-  --color-surface-2: var(--color-surface-2);
-  --color-surface-3: var(--color-surface-3);
+  --color-surface: var(--color-surface);
   --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
   --color-text-primary: var(--color-text-primary);
   --color-text-secondary: var(--color-text-secondary);
   --color-text-muted: var(--color-text-muted);
-  --color-accent-lime: var(--color-accent-lime);
-  --color-accent-orange: var(--color-accent-orange);
+  --color-black: var(--color-black);
+  --color-white: var(--color-white);
+  --color-success: var(--color-success);
+  --color-error: var(--color-error);
 
-  --font-display: var(--font-audiowide);
-  --font-body: var(--font-exo2);
+  --font-sans: var(--font-family-sans);
 
-  --radius-card: var(--radius-card);
-  --radius-control: var(--radius-control);
+  --radius-none: var(--radius);
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
   background: var(--color-bg);
   color: var(--color-text-primary);
-  font-family: var(--font-body), system-ui, sans-serif;
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
 }
@@ -58,7 +59,13 @@ body {
   border-color: var(--color-border);
 }
 
-/* Hide scrollbars on horizontally-scrolling app strips (week selector, tabs) while keeping them scrollable */
+/* Título / eyebrow estilo Adidas: mayúsculas, negrita, tracking amplio */
+.label-heading {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -67,7 +74,6 @@ body {
   display: none;
 }
 
-/* Safe-area padding for the bottom tab bar on notched devices */
 .pb-safe {
   padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
 }

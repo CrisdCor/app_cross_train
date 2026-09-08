@@ -7,8 +7,8 @@ export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTML
       <input
         ref={ref}
         className={clsx(
-          "h-[42px] w-full rounded-control border border-border bg-surface-2 px-4 text-[15px] text-text-primary placeholder:text-text-muted",
-          "outline-none transition-colors focus:border-text-secondary",
+          "h-[48px] w-full border border-border bg-white px-4 text-[15px] text-text-primary placeholder:text-text-muted",
+          "outline-none transition-colors focus:border-black",
           className
         )}
         {...props}
